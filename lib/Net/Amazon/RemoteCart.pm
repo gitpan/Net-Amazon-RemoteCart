@@ -13,7 +13,7 @@ use Net::Amazon::Request;
 ###use Data::Dumper; 
 use Log::Log4perl qw(:easy);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use base qw( Net::Amazon );
 
@@ -562,23 +562,25 @@ Net::Amazon::RemoteCart,
 RemoteCart is an interface to Amazon Web Services Remote Cart API,
 built on Mike Schilli's Net::Amazon package.
 
-It attempts to get around some of the inconveniences of accessing
-the Amazon remote cart API directly and make the remote cart work as
-as closely as is practical to how someone (OK, by someone I mean ME) 
-would expect a remote shopping cart to work. One thing it doesn't do 
-for you is maintain state between requests, but this can be done 
-either by saving the cart object in a session and passing that to
-new() on the next request, or by saving just the cart_id and hmac
-(returned from Amazon) and passing those to new() and then running
-sync() or get_items_online() to refetch the cart data.
+RemoteCart attempts to be a consistent and easy to use interface to
+the Amazon remote cart API. I've tried to make it work as closely as 
+is practical to how someone (Ok, by someone I mean ME) would expect a 
+shopping cart to work. It has methods to add, remove, fetch items, 
+and modify their quantities based on the product's ASIN. 
 
 Each time a request goes to Amazon's remote cart (i.e. for adding, 
-modifying, removing items, or running sync()), the data for 
-the whole cart is returned. So the RemoteCart module will update 
-it's own representation of the cart each time this happens. Then
-when you access methods like get_items() or purchase_url(), 
-the data is retrieved from the local instance of the cart rather 
-than accessing Amazon's server every time.
+modifying, removing items, or running sync(), etc.), AWS returns the 
+data for the whole cart. So the RemoteCart module will update it's own 
+representation of the cart each time this happens. Then when you access 
+methods like get_items() or purchase_url(), the data is retrieved from 
+the local instance of the cart rather than accessing Amazon's server 
+every time.
+
+One thing it doesn't do for you is maintain state between requests. 
+This can be done either by saving the cart object in a session and 
+passing that to new() on the next request, or by saving just the 
+cart_id and hmac (returned from Amazon) and passing those to new() and 
+then running sync() or get_items_online() to refetch the cart data.
 
 I've also added a couple of convenience methods like total_cost(),
 and formatted versions of the prices that I think are useful but 
@@ -627,8 +629,8 @@ Add one or more items to the remote cart.
 Does NOT require that cart_id and hmac be set. If they are not set,
 a new remote cart will be created. 
 
-If an item or items that are already in the current cart instance are re-added, 
-a separate "modify" request will be generated for those items. 
+If an item or items that are already in the current cart instance are 
+re-added, a separate "modify" request will be generated for those items. 
 
 Running $cart->sync before adding items to an existing remote cart
 would be a good idea if you're not sure that you have the latest data
@@ -636,7 +638,7 @@ in your current cart instance. Otherwise you can end up with multiple
 versions of the same item in your remote cart, making it difficult to
 remove or modify them.   
 
-    $res = $cart->add(asin=>quantity, anotherasin=>itsquantity);
+    $res = $cart->add('asin'=>quantity, 'anotherasin'=>itsquantity);
 
 
 
@@ -648,12 +650,12 @@ Modify the quantity of items in the remote cart.
 Requires that cart_id and hmac be set. 
 
 If the quantity is set to 0 for one or more items, a separate "remove" 
-request will be generated for those items. If an item isn't set in the current 
-cart instance, it will be skipped. Running $cart->sync before modifying
-would be a good idea if you're not sure that you have the latest data set
-in your cart instance.  
+request will be generated for those items. If an item isn't set in the 
+current cart instance, it will be skipped. Running $cart->sync before 
+modifying would be a good idea if you're not sure that you have the latest 
+data set in your cart instance.  
 
-    $res = $cart->modify(asin=>newquantity, anotherasin=>itsnewquantity);
+    $res = $cart->modify('asin'=>newquantity, 'anotherasin'=>itsnewquantity);
 
 
 =item remove()
